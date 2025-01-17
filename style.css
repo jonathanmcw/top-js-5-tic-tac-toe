@@ -35,11 +35,11 @@ p {
     padding: 32px 32px;
 }
 
-#player-display {
+#player-display, #instruction-display {
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin: 8px;
+    margin-bottom: 8px;
     font-size: 16pt
 }
 
