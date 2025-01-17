@@ -7,7 +7,7 @@ function createUser(userName, num = 0) {
     function giveScore() {
         return ++score;
     }
-    return {name, gender, giveScore};
+    return {name, assignment, gender, giveScore};
 }
 
 function createGameBoard(p1, p2) {
@@ -16,15 +16,18 @@ function createGameBoard(p1, p2) {
                      [0,0,0]]; // x: 0,1,2 y: 0,1,2
     
     // const players = { p1:1, p2:-1};
-    const players = { };
-
+    // const players = { };
+    const players = [ p1, p2 ] ;
     // TODO: ERROR check if p1, p2 have attribution of .name, or is a player
-    players[p1.name] = 1; // O
-    players[p2.name] = -1; // X
+    // players[p1].assignment = 1; // O
+    // players[p2].assignment = -1; // X
+    p1.assignment = 1;
+    p2.assignment = -1;
 
     function playTurn( player, x, y ) {
         // TODO: ERR x, y range has to be 0, 1, 2
-        grid[x][y] = players[player.name];
+        // grid[x][y] = players[player.name];
+        grid[x][y] = player.assignment; 
         console.log(`${player.name} has moved to ${x} ${y}`);
         return {grid}
         // ERROR: Player not in player list
@@ -77,25 +80,35 @@ function createGameBoard(p1, p2) {
 function initializeGame() {
     // Welcome instructions and enable selection of playing mode - P to P / P to C 
     // Setting up the game board
-    console.log("Welcome to Tic Tac Toe!");
+    // console.log("Welcome to Tic Tac Toe!");
     const player1 = createUser("JW");
     const player2 = createUser("AI");
     const board = createGameBoard(player1, player2);
-    board.playTurn(player1, 0, 2);
-    board.playTurn(player2, 0, 1);
-    board.playTurn(player1, 1, 1);
-    board.playTurn(player2, 1, 0);
-    board.playTurn(player1, 2, 0);
-    board.show();
-    board.checkWinner();
+    
+    let i = 0;
+    while ( i < 9 ) {
+        for ( let player of board.players ) {
+            let [x, y] = prompt(`${player.name} it is ur turn to play, enter number "x-y"`).split('-');
+            // const  = str;
+            board.playTurn(player, x, y);
+            board.show();
+            board.checkWinner()
+            let winner = board.checkWinner(); 
+            if (winner) {
+                alert(`${winner} win confirmed!`);
+                return winner;
+            };
+            i++;
+        }
+    }
 }
 
 // Function to handle player move
-function handlePlayerMove(player, position) {
+// function handlePlayerMove(player, position) {
     // Simplest form - TTT, single player across the board
-    // for 2 player, player one go make a selection, followed by 2nd player making their own 
-    console.log(`Player ${player} moved to position ${position}`);
-}
+    // for 2 player, player one go make a selection, followed by 2nd player making their own     
+//     console.log(`Player ${player} moved to position ${position}`);
+// }
 
 // Function to check for a winner
 function checkWinner() {
@@ -111,4 +124,3 @@ function resetGame() {
 
 // Initialize the game when the script loads
 initializeGame();
-
