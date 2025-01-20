@@ -6,13 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = userName;
         const assignment = num;
     
-        let score = 0;
+        let spositione = 0;
     
-        function giveScore() {
-            return ++score;
+        function giveSpositione() {
+            return ++spositione;
         }
     
-        return {name, assignment, giveScore};
+        return {name, assignment, giveSpositione};
     }
     
     // GameBoard
@@ -21,22 +21,35 @@ document.addEventListener("DOMContentLoaded", () => {
                         [0,0,0],
                         [0,0,0]]; // x: 0,1,2 y: 0,1,2
         
-        // TODO: ERROR check if p1, p2 have attribution of .name, or is a player
+        // Check if p1, p2 have attribution of .name, or is a player
+        if (!p1.name || !p2.name) {
+            throw new Error("Invalid players: Both players must have a name attribute.");
+        }
+
         const players = [ p1, p2 ] ;
         p1.assignment = 1;
-        p2.assignment = -1;
-    
-        function playTurn( player, x, y ) {
-            // TODO: ERR x, y range has to be 0, 1, 2
-            grid[x][y] = player.assignment; 
-            console.log(`${player.name} has moved to ${x} ${y}`);
-            return {grid}
-            // ERROR: Player not in player list
+
+        function playTurn(player, position) {
+            // Check if x, y range is within 0, 1, 2
+            if (position.x >= 0 && position.x <= 2 && position.y >= 0 && position.y <= 2) {
+                if (grid[position.x][position.y] === 0) {
+                    grid[position.x][position.y] = player.assignment; 
+                    console.log(`${player.name} has moved to ${position.x} ${position.y}`);
+                    return {player, grid};
+                } else {
+                    console.error("Invalid move: position already occupied.");
+                    return null;
+                }
+            } else {
+                console.error("Invalid move: position out of range.");
+                return null;
+            }
         }
     
         function checkWinner() {
             let diag1Sum = 0;
             let diag2Sum = 0;
+
             // Check rows and columns
             for (let i = 0; i < 3; i++) {
                 let rowSum = 0;
@@ -82,67 +95,94 @@ document.addEventListener("DOMContentLoaded", () => {
         return {grid, players, playTurn, checkWinner, reset}
     }
     
-    // function markCell () {
+    function createBoardDisplay(p1, p2) {
+        const player1Display = document.getElementById("player-1-display");
+        const player2Display = document.getElementById("player-2-display");
+        const instructionDisplay = document.getElementById("instruction-display");
+        const gameBoardCell = document.querySelectorAll(".cell");
 
-    // }
+        player1Display.textContent = p1.name;
+        player2Display.textContent = p2.name;
+
+        function getPlayerSelection(player, callback) {
+            let symbol = player.assignment === 1 ? "O" : "X";
+            instructionDisplay.textContent = `Turn: ${player.name}`;
+
+            function handleClick(e) {
+                if (e.target.textContent === "") {
+                    e.target.textContent = symbol;
+                    const position = { x: parseInt(e.target.dataset.x, 10), y: parseInt(e.target.dataset.y, 10) };
+                    gameBoardCell.forEach(cell => cell.removeEventListener("click", handleClick));
+                    callback(position);
+                }
+            }
+
+            gameBoardCell.forEach((cell) => {
+                cell.addEventListener("click", handleClick);
+            });
+        }
+
+        function reset() {
+            console.log("Board reset");
+            gameBoardCell.forEach(cell => cell.textContent = "" );
+        }
+
+        return { instructionDisplay, getPlayerSelection, reset };
+    }
+
+    function gameLoop(players, board, boardView) {
+        let winner;
+        let currentPlayerIndex = 0;
+        let currentTurnIndex = 0;
+
+        board.reset();
+        boardView.reset();
+    
+        function nextTurn() {
+            if (winner) return;
+    
+            const currentPlayer = players[currentPlayerIndex];
+            
+            // Handle capturing player selection
+            boardView.getPlayerSelection(currentPlayer, (position) => {
+
+                // Handle board logic
+                board.playTurn(currentPlayer, position);
+                 
+                winner = board.checkWinner();
+                if (winner) {
+                    alert(`${winner} win!`);
+                    initializeGame();
+                } else if ( currentTurnIndex < 8 ) {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                    currentTurnIndex ++;
+                    nextTurn();
+                } else {
+                    alert(`Draw!`);
+                    initializeGame();
+                }
+            });
+        }
+    
+        nextTurn();
+    }
 
     // Function to initialize the game
     function initializeGame() {
-    
-        // Setting up the game board
-        const player1 = createUser("You");
-        const player2 = createUser("AI");
-        const board = createGameBoard(player1, player2);
-        
-        // Game loop
-        let i = 0;
-        
-        const instructionDisplay = document.getElementById("instruction-display");
-        const gameBoardDisplay = document.getElementById("game-board-display");
 
-        // TODO: Need to have .remove() for cell 
-        gameBoardDisplay.addEventListener( "mouseover", (e) => {
-            if (e.target.classList.contains("cell")) {
-                const cell = e.target;
+        // Set up player
+        const player1 = createUser("Player 1");
+        const player2 = createUser("Player 2");
+        const players = [player1, player2];
 
-                cell.addEventListener( "click" , (e) => {
-                    alert(`${e.target.dataset.x} ${e.target.dataset.y}`);
-                })
-            }
-        })
-        
-        outerLoop: while ( i < 9 ) {
-            for ( let player of board.players ) {
-                instructionDisplay.textContent = `Hey, it is your turn to play.`;
-                // let [x, y] = prompt(`${player.name} it is ur turn to play, enter number "x-y"`).split('-');
-                // board.playTurn(player, x, y); // 0-0
-                // let winner = board.checkWinner(); 
-                // if (winner) {
-                //     break outerLoop;
-                // };
-                i++;
-            }
-        }
-    
-        // board.reset();
-        console.log("Game Over");
+        // Set up board, separating board logic and board display view
+        const board = createGameBoard(player1, player2);        
+        const boardView = createBoardDisplay(player1, player2);
+
+        // Game loop goes here
+        gameLoop(players, board, boardView);
     }
     
-    // Function to handle player move
-    // function handlePlayerMove(player, position) {
-        // Simplest form - TTT, single player across the board
-        // for 2 player, player one go make a selection, followed by 2nd player making their own     
-    //     console.log(`Player ${player} moved to position ${position}`);
-    // }
-    
-    // Function to check for a winner
-    // function checkWinner() {
-    //     // At the end after each player has made a selection, check whether winning condition has been matched
-    //     // If any side makes connection ( could be a matrix, then the the )
-    //     console.log("Checking for a winner");
-    // }
-    
-    // Initialize the game when the script loads
     initializeGame();
 
 });
