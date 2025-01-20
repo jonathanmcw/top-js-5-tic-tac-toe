@@ -6,13 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = userName;
         const assignment = num;
     
-        let spositione = 0;
+        let score = 0;
     
-        function giveSpositione() {
-            return ++spositione;
+        function giveScore() {
+            return ++score;
         }
     
-        return {name, assignment, giveSpositione};
+        return {name, assignment, giveScore};
     }
     
     // GameBoard
@@ -23,11 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Check if p1, p2 have attribution of .name, or is a player
         if (!p1.name || !p2.name) {
-            throw new Error("Invalid players: Both players must have a name attribute.");
+            throw new Error("Invalid players: Both players must have a name.");
         }
 
         const players = [ p1, p2 ] ;
         p1.assignment = 1;
+        p2.assignment = -1;
 
         function playTurn(player, position) {
             // Check if x, y range is within 0, 1, 2
@@ -111,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             function handleClick(e) {
                 if (e.target.textContent === "") {
                     e.target.textContent = symbol;
-                    const position = { x: parseInt(e.target.dataset.x, 10), y: parseInt(e.target.dataset.y, 10) };
+                    const position = { x: e.target.dataset.x, y: e.target.dataset.y };
                     gameBoardCell.forEach(cell => cell.removeEventListener("click", handleClick));
                     callback(position);
                 }
@@ -186,4 +187,3 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeGame();
 
 });
-
